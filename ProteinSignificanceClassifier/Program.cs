@@ -165,7 +165,7 @@ namespace ProteinSignificanceClassifier
         /// Determines which proteins are significant based on N Value Threshold and prints out the classifications
         /// </summary>
         private void printSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> actualNValues, double nValueThreshold,
-            string printSignificantProteinsLocation)
+            List<double> actualPValues, List<double> actualLogFoldChange, string printSignificantProteinsLocation)
         {
 
             //"C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ChangedSemicolon11.csv"
@@ -173,15 +173,22 @@ namespace ProteinSignificanceClassifier
             {
                 for (int i = 0; i < actualNValues.Count; i++)
                 {
+                    if (i == 0)
+                    {
+                        writetext.Write("ProteinID" + ", " + "PValue" + ", " + "LogFoldChange" + ", " + "Significance");
+                        writetext.WriteLine();
+                    }
                     ProteinRowInfo proteinRowInfo = allProteinInfo[i];
                     if (actualNValues[i] < nValueThreshold)
                     {
-                        writetext.Write(proteinRowInfo.getProteinID() + ", " + "Not Significant");
+                        writetext.Write(proteinRowInfo.getProteinID() + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
+                            + ", " + "Not Significant");
                         writetext.WriteLine();
                     }
                     else
                     {
-                        writetext.Write(proteinRowInfo.getProteinID() + ", " + "Significant");
+                        writetext.Write(proteinRowInfo.getProteinID() + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
+                            + ", " + "Significant");
                         writetext.WriteLine();
                     }
                 }
@@ -216,6 +223,8 @@ namespace ProteinSignificanceClassifier
                         imputationProcess.RunImputationProcess(allProteinInfo, samplesFileNames, meanFraction);
 
                         List<double> actualNValues = new List<double>(); // will store actual(real) N values
+                        List<double> actualPValues = new List<double>(); // will store actual(real) P values
+                        List<double> actualLogFoldChange = new List<double>(); // will store actual(real) Log Fold Change values
                         List<double> permutedNValues = new List<double>(); // will store permuted(fake) N values
                         StatisticalTests statisticalTests = new StatisticalTests();
 
@@ -254,7 +263,7 @@ namespace ProteinSignificanceClassifier
                                 // Compute actual(real) N Values with the chosen pair of conditions using T-Tests and
                                 // store in actualNValues array
                                 statisticalTests.GetNValueUsingTTest(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
-                                    actualNValues, sOValue);
+                                    actualNValues, actualPValues, actualLogFoldChange, sOValue);
 
                                 // Compute permuted(fake) N Values with the chosen pair of conditions using T-Tests and 
                                 // store in permutedNValues array

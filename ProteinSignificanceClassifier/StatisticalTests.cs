@@ -63,7 +63,7 @@ namespace ProteinSignificanceClassifier
         /// Calculates the N Value for each protein based on its intensity values in two conditions
         /// </summary>
         public void GetNValueUsingTTest(List<double> proteinFirstConditionIntensityValues, List<double> proteinSecondConditionIntensityValues,
-            List<double> actualNValues, double sOValue)
+            List<double> actualNValues, List<double> actualPValues, List<double> actualLogFoldChange, double sOValue)
         {
             double[] firstConditionIntensityValues = new double[proteinFirstConditionIntensityValues.Count];
             double[] secondConditionIntensityValues = new double[proteinSecondConditionIntensityValues.Count];
@@ -103,6 +103,8 @@ namespace ProteinSignificanceClassifier
             double nValue = (logpValue * (logfoldChange * logfoldChange - sOValue * sOValue)) / ((logfoldChange) * (logfoldChange));
 
             actualNValues.Add(nValue);
+            actualLogFoldChange.Add(logfoldChange);
+            actualPValues.Add(pValue);
         }
 
         /// <summary>
