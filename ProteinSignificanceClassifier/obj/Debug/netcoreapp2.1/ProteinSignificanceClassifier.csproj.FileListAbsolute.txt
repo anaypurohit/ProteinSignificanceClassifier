@@ -1,0 +1,8 @@
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\ProteinSignificanceClassifier.deps.json
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\ProteinSignificanceClassifier.runtimeconfig.json
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\ProteinSignificanceClassifier.runtimeconfig.dev.json
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\ProteinSignificanceClassifier.dll
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.csprojAssemblyReference.cache
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.csproj.CoreCompileInputs.cache
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.AssemblyInfoInputs.cache
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.AssemblyInfo.cs
