@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ProteinSignificanceClassifier
 {
+    /// <summary>
+    /// This class contains the statsitical tests used in the program
+    /// </summary>
     public class StatisticalTests
     {
         /// <summary>
