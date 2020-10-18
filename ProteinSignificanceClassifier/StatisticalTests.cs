@@ -226,7 +226,7 @@ namespace ProteinSignificanceClassifier
                     double logpValue = -Math.Log10(pValue);
                     double logfoldChange = secondConditionIntensityMean - firstConditionIntensityMean;
 
-                    permutedNValues.Add((logpValue * (logfoldChange * logfoldChange - sOValue * sOValue)) / ((logfoldChange) * (logfoldChange))); // need to adjust constant term
+                    permutedNValues.Add((logpValue * (logfoldChange * logfoldChange - sOValue * sOValue)) / ((logfoldChange) * (logfoldChange)));
                 }
                 count++;
                 if (count == 2) break;
