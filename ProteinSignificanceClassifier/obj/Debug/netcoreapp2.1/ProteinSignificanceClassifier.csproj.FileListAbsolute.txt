@@ -6,3 +6,7 @@ C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClas
 C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.csproj.CoreCompileInputs.cache
 C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.AssemblyInfoInputs.cache
 C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.AssemblyInfo.cs
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\Accord.dll.config
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\ProteinSignificanceClassifier.pdb
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.dll
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.pdb

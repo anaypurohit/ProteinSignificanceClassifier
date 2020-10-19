@@ -29,11 +29,11 @@ namespace ProteinSignificanceClassifier
                 samplefileConditionRelation.TryGetValue(sampleCondition, out List<string> sampleFiles);
                 if (sampleFiles == null)
                 {
-                    samplefileConditionRelation.Add(sampleCondition, new List<string>() { sampleFileName });
+                    samplefileConditionRelation.Add(sampleCondition, new List<string>() { "Intensity_" + sampleFileName });
                 }
                 else
                 {
-                    sampleFiles.Add(sampleFileName);
+                    sampleFiles.Add("Intensity_" + sampleFileName);
                 }
 
             }
@@ -221,7 +221,7 @@ namespace ProteinSignificanceClassifier
                 {
                     while (sOValue < 2)
                     {
-                        for (int k = 0; k < 8; k++)
+                        for (int k = 1; k < 9; k++)
                         {
                             proteinBasedSignificance = new Program();
                             //Declaring variables which will be generated after parsing QuantifiedPeptides file
@@ -296,6 +296,7 @@ namespace ProteinSignificanceClassifier
                                 maxSignificantCount = newSignificantCount;
                                 proteinBasedSignificance.printSignificantProtein(allProteinInfo, actualNValues, nValueThreshold, actualPValues,
                                     actualLogFoldChange, "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBaseedSignificance.csv");
+                                Console.WriteLine("k value - " + k + "s0Value - " + sOValue + "meanFraction - " + meanFraction + "Significant - " + maxSignificantCount);
                             }
                         }
                         sOValue = sOValue + 0.1;
