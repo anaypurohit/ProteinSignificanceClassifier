@@ -91,12 +91,6 @@ namespace ProteinSignificanceClassifier
             var ftest = new FTest(firstConditionIntensityVariance, secondConditionIntensityVariance, proteinFirstConditionIntensityValues.Count - 1, proteinSecondConditionIntensityValues.Count - 1);
             bool significant = ftest.Significant; // gets whether null hypothesis can be rejected
 
-            // confirm whether your understanding of significant is right
-            if (Double.IsNaN(firstConditionIntensityVariance) || Double.IsNaN(secondConditionIntensityVariance))
-            {
-                return;
-            }
-
             // Create two tailed t test to get p values
             TwoSampleTTest ttest = new TwoSampleTTest(firstConditionIntensityValues, secondConditionIntensityValues, !significant);
             double pValue = ttest.PValue;
@@ -217,8 +211,6 @@ namespace ProteinSignificanceClassifier
 
                     var ftest = new FTest(firstConditionIntensityVariance, secondConditionIntensityVariance, swappedFirstConditionIntensityValues.Length - 1, swappedSecondConditionIntensityValues.Length - 1);
                     bool significant = ftest.Significant; // gets whether null hypothesis can be rejected
-
-                    if (Double.IsNaN(firstConditionIntensityVariance) || Double.IsNaN(secondConditionIntensityVariance)) return;
 
                     // Create two tailed t test to get p values
                     TwoSampleTTest ttest = new TwoSampleTTest(swappedFirstConditionIntensityValues, swappedSecondConditionIntensityValues, !significant);

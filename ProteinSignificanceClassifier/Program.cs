@@ -213,13 +213,13 @@ namespace ProteinSignificanceClassifier
             {
                 string firstCondition = conditionPair[0];
                 string secondCondition = conditionPair[1];
-                double sOValue = 0.1;//0.3;
-                double meanFraction = 0.1;//5.7; //2.4
+                double sOValue = 0.1;
+                double meanFraction = 0.1;
                 int maxSignificantCount = 0;
 
-                while (meanFraction < 6)
+                while (meanFraction < 1)
                 {
-                    while (sOValue < 2)
+                    while (sOValue < 1)
                     {
                         for (int k = 1; k < 9; k++)
                         {
