@@ -206,7 +206,7 @@ namespace ProteinSignificanceClassifier
             Program proteinBasedSignificance = new Program();
             // Parse the ExperimentalDesign File to get info of samples and conditions they belong to
             Dictionary<string, List<string>> samplefileConditionRelation = proteinBasedSignificance.ExpermientalDesignParser("C:/Users/Anay/Desktop/UW Madison/Smith Lab/Spectra Data/ExperimentalDesign.tsv");
-            // get all conditions and pair them up for the T Tests and Permutation Testing
+            // get all conditions and pair them up for Significance classification
             List<string> allConditions = new List<string>(samplefileConditionRelation.Keys);
             List<List<string>> allTwoConditionCombinations = proteinBasedSignificance.GenerateAllCombinationsOfTwoConditions(allConditions);
             foreach (List<string> conditionPair in allTwoConditionCombinations)
@@ -242,7 +242,7 @@ namespace ProteinSignificanceClassifier
                             List<double> permutedNValues = new List<double>(); // will store permuted(fake) N values
                             StatisticalTests statisticalTests = new StatisticalTests();
 
-                            // Compute actual and permuted N Values for each protein by considering every condition pair
+                            // Compute actual and permuted N Values for each protein using T Tests and Permutation Testing
                             for (int i = 0; i < allProteinInfo.Count; i++)
                             {
                                 ProteinRowInfo proteinRowInfo = allProteinInfo[i];
@@ -296,7 +296,6 @@ namespace ProteinSignificanceClassifier
                                 maxSignificantCount = newSignificantCount;
                                 proteinBasedSignificance.printSignificantProtein(allProteinInfo, actualNValues, nValueThreshold, actualPValues,
                                     actualLogFoldChange, "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBaseedSignificance.csv");
-                                Console.WriteLine("k value - " + k + "s0Value - " + sOValue + "meanFraction - " + meanFraction + "Significant - " + maxSignificantCount);
                             }
                         }
                         sOValue = sOValue + 0.1;
