@@ -9,36 +9,21 @@ namespace ProteinSignificanceClassifier
     /// </summary>
     public class ProteinRowInfo
     {
+        //ProteinID is never used. I'm wondering if this object isn't necessary and you could simply replace it with a Dictionary?
+        public ProteinRowInfo()
+        {
+            SamplesIntensityData = new Dictionary<string, double>();
+        }
+
         /// <summary>
         /// Stores detected intensity values of protein in each sample. 
         /// Maps condition's sample name to the intensity value
         /// </summary>
-        private Dictionary<string, double> samplesintensityData = new Dictionary<string, double>();
+        public Dictionary<string, double> SamplesIntensityData { get; set; }
 
         /// <summary>
         /// Unique protein ID
         /// </summary>
-        private string proteinID;
-
-
-        public Dictionary<string, double> getSamplesIntensityValues()
-        {
-            return this.samplesintensityData;
-        }
-
-        public void setSamplesIntensityValues(string intensityName, double value)
-        {
-            this.samplesintensityData.Add(intensityName, value);
-        }
-
-        public string getProteinID()
-        {
-            return this.proteinID;
-        }
-
-        public void setProteinID(string proteinID)
-        {
-            this.proteinID = proteinID;
-        }
+        public string ProteinID { get; set; }
     }
 }

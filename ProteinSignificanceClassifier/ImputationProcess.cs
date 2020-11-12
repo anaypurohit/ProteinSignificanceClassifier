@@ -15,7 +15,7 @@ namespace ProteinSignificanceClassifier
         private void CalculateMissingIntensityValuesInSample(ProteinRowInfo proteinRowInfo, double[] missingFactor,
             List<string> samplesFileNames)
         {
-            Dictionary<string, double> samplesintensityData = proteinRowInfo.getSamplesIntensityValues();
+            Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
             for (int i = 0; i < samplesFileNames.Count; i++)
             {
                 // detected protein's sample with missing intensity value
@@ -34,7 +34,7 @@ namespace ProteinSignificanceClassifier
         private void CalculateNumberAndSumOfIntensityValuesOfSample(ProteinRowInfo proteinRowInfo, double[] sampleAllIntensityValuesSum,
             List<string> samplesFileNames, int[] numberOfIntensityValuesInSample)
         {
-            Dictionary<string, double> samplesintensityData = proteinRowInfo.getSamplesIntensityValues();
+            Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
             for (int i = 0; i < samplesFileNames.Count; i++)
             {
                 if (samplesintensityData[samplesFileNames[i]] == 0)
@@ -56,7 +56,7 @@ namespace ProteinSignificanceClassifier
         private void CalculateSampleStandardDeviationNumerator(ProteinRowInfo proteinRowInfo, double[] samplesStandardDeviationNumerators,
             List<string> samplesFileNames, double[] samplesMeanIntensityValue)
         {
-            Dictionary<string, double> samplesintensityData = proteinRowInfo.getSamplesIntensityValues();
+            Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
             for (int i = 0; i < samplesFileNames.Count; i++)
             {
                 if (samplesintensityData[samplesFileNames[i]] == 0) continue;
@@ -73,30 +73,31 @@ namespace ProteinSignificanceClassifier
         private void ImputeData(ProteinRowInfo proteinRowInfo, double[] samplesMeanIntensityValue, double[] samplesStandardDeviation,
             List<string> samplesFileNames, double[] missingFactor, int[] numberOfIntensityValuesInSample, double meanFraction)
         {
-            Dictionary<string, double> samplesintensityData = proteinRowInfo.getSamplesIntensityValues();
+            Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
 
             for (int i = 0; i < samplesFileNames.Count; i++)
             {
                 if (samplesintensityData[samplesFileNames[i]] == 0)
                 {
-
                     double imputedFraction = missingFactor[i] / (numberOfIntensityValuesInSample[i] + missingFactor[i]);
-                    if (imputedFraction > 0.5) continue;
-                    double imputedProbability = imputedFraction / (1 - imputedFraction);
-                    double standardDeviationFraction = Math.Max(2 * imputedFraction, 0.3);
-                    double stdDevFraction = 0.6 * (1 - (imputedFraction * imputedFraction));
-                    MathNet.Numerics.Distributions.Normal probabilityDist = new Normal(samplesMeanIntensityValue[i], standardDeviationFraction);
-                    double probabilitySetPoint = probabilityDist.Density(samplesMeanIntensityValue[i] + stdDevFraction * standardDeviationFraction);
-                    double yCoordinate = imputedProbability * probabilitySetPoint;
-                    double deltaX = standardDeviationFraction * stdDevFraction;
-                    MathNet.Numerics.Distributions.Normal xCoord = new Normal(samplesMeanIntensityValue[i], samplesStandardDeviation[i]);
-                    double deltaMu = xCoord.InverseCumulativeDistribution(yCoordinate);
-                    double meanDownshift = (deltaMu - deltaX * meanFraction);
+                    if (imputedFraction <= 0.5)
+                    {
+                        double imputedProbability = imputedFraction / (1 - imputedFraction);
+                        double standardDeviationFraction = Math.Max(2 * imputedFraction, 0.3);
+                        double stdDevFraction = 0.6 * (1 - (imputedFraction * imputedFraction));
+                        Normal probabilityDist = new Normal(samplesMeanIntensityValue[i], standardDeviationFraction);
+                        double probabilitySetPoint = probabilityDist.Density(samplesMeanIntensityValue[i] + stdDevFraction * standardDeviationFraction);
+                        double yCoordinate = imputedProbability * probabilitySetPoint;
+                        double deltaX = standardDeviationFraction * stdDevFraction;
+                        Normal xCoord = new Normal(samplesMeanIntensityValue[i], samplesStandardDeviation[i]);
+                        double deltaMu = xCoord.InverseCumulativeDistribution(yCoordinate);
+                        double meanDownshift = (deltaMu - deltaX * meanFraction);
 
 
-                    MathNet.Numerics.Distributions.Normal normalDist = new Normal(meanDownshift, standardDeviationFraction);
-                    double imputeVal = normalDist.Sample();
-                    samplesintensityData[samplesFileNames[i]] = imputeVal;
+                        Normal normalDist = new Normal(meanDownshift, standardDeviationFraction);
+                        double imputeVal = normalDist.Sample();
+                        samplesintensityData[samplesFileNames[i]] = imputeVal;
+                    }
                 }
             }
         }
