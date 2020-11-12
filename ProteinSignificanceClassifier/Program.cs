@@ -15,6 +15,8 @@ namespace ProteinSignificanceClassifier
         {
             Dictionary<string, List<string>> samplefileConditionRelation = new Dictionary<string, List<string>>();
             int skipFirstLine = 0;
+
+            //refactor here
             foreach (var line in File.ReadLines(experimentalDesignLocation))
             {
                 if (skipFirstLine == 0)
