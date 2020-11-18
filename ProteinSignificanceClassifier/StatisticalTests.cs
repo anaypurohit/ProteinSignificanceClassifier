@@ -19,12 +19,9 @@ namespace ProteinSignificanceClassifier
             List<List<int>> allTwoIndicesCombination = new List<List<int>>();
             for (int i = 0; i < indices.Length; i++)
             {
-                for (int j = 0; j < indices.Length; j++)
+                for (int j = i + 1; j < indices.Length; j++)
                 {
-                    if (i < j)
-                    {
-                        allTwoIndicesCombination.Add(new List<int> { i, j });
-                    }
+                    allTwoIndicesCombination.Add(new List<int> { i, j });
                 }
             }
             return allTwoIndicesCombination;
@@ -36,14 +33,14 @@ namespace ProteinSignificanceClassifier
         private double CalculateProteinIntensityValuesStandardDeviation(double[] vals, double mean)
         {
             double stdDev = 0;
-            for (int i = 0; i < vals.Length; i++)
+            for (int i = 0; i < vals.Length; i++) //better to use foreach here, because you have to lookup vals[i] twice.
             {
-                stdDev = stdDev + (vals[i] - mean) * (vals[i] - mean);
+                stdDev += (vals[i] - mean) * (vals[i] - mean);
             }
-            stdDev = stdDev / vals.Length;
+            stdDev /= vals.Length;
             stdDev = Math.Sqrt(stdDev);
-            return stdDev;
 
+            return stdDev;
         }
 
         /// <summary>
@@ -51,6 +48,7 @@ namespace ProteinSignificanceClassifier
         /// </summary>
         private double CalculateProteinMeanIntensityValue(double[] vals)
         {
+            //Delete this method. Just use vals.Average();
             double mean = 0;
             for (int i = 0; i < vals.Length; i++)
             {
@@ -64,9 +62,11 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Calculates the N Value for each protein based on its intensity values in two conditions
         /// </summary>
+        /// //need explanation on what an N value is
         public void GetNValueUsingTTest(List<double> proteinFirstConditionIntensityValues, List<double> proteinSecondConditionIntensityValues,
             List<double> actualNValues, List<double> actualPValues, List<double> actualLogFoldChange, double sOValue)
         {
+            //why are these being cloned?
             double[] firstConditionIntensityValues = new double[proteinFirstConditionIntensityValues.Count];
             double[] secondConditionIntensityValues = new double[proteinSecondConditionIntensityValues.Count];
 
@@ -80,7 +80,7 @@ namespace ProteinSignificanceClassifier
                 secondConditionIntensityValues[i] = proteinSecondConditionIntensityValues[i];
             }
 
-
+            //sometimes less is more with variable names. For example, "mean1" vs "firstConditionIntensityMean" improves readability without diminishing clarity
             double firstConditionIntensityMean = CalculateProteinMeanIntensityValue(firstConditionIntensityValues);
             double secondConditionIntensityMean = CalculateProteinMeanIntensityValue(secondConditionIntensityValues);
             double firstConditionIntensityStandardDev = CalculateProteinIntensityValuesStandardDeviation(firstConditionIntensityValues, firstConditionIntensityMean);
@@ -88,6 +88,8 @@ namespace ProteinSignificanceClassifier
             double firstConditionIntensityVariance = firstConditionIntensityStandardDev * firstConditionIntensityStandardDev;
             double secondConditionIntensityVariance = secondConditionIntensityStandardDev * secondConditionIntensityStandardDev;
 
+            //don't need to save "ftest" if you're never going to use it again
+            //write a note here what the purpose of the f-test is. It's not as well known as the t-test
             var ftest = new FTest(firstConditionIntensityVariance, secondConditionIntensityVariance, proteinFirstConditionIntensityValues.Count - 1, proteinSecondConditionIntensityValues.Count - 1);
             bool significant = ftest.Significant; // gets whether null hypothesis can be rejected
 
@@ -96,8 +98,11 @@ namespace ProteinSignificanceClassifier
             double pValue = ttest.PValue;
             double logpValue = -Math.Log10(pValue);
             double logfoldChange = secondConditionIntensityMean - firstConditionIntensityMean;
+            //need a note on where this came from
             double nValue = (logpValue * (logfoldChange * logfoldChange - sOValue * sOValue)) / ((logfoldChange) * (logfoldChange));
 
+            //these are interesting names that imply the existence of fake nvalues, foldchanges, and pvalues.
+            //how about "allNValues"?
             actualNValues.Add(nValue);
             actualLogFoldChange.Add(logfoldChange);
             actualPValues.Add(pValue);
@@ -106,9 +111,12 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Generates fake N Value's for each protein based on its intensity values in two conditions using Permutation Testing
         /// </summary>
+        /// //alright, you win, I guess there are fake nvalues. Maybe a better nomenclature would be observedNValues vs permutedNValues?
+        /// There's a lot of code duplication between this method and GetNValueUsingTTest. Try creating permutations and then calling GetNValueUsingTTest for each one.
         public void GetNValueUsingPermutationtests(List<double> proteinFirstConditionIntensityValues, List<double> proteinSecondConditionIntensityValues,
              List<double> permutedNValues, double sOValue)
         {
+            //why are these being cloned?
             double[] firstConditionIntensityValues = new double[proteinFirstConditionIntensityValues.Count];
             double[] secondConditionIntensityValues = new double[proteinSecondConditionIntensityValues.Count];
 
@@ -233,30 +241,28 @@ namespace ProteinSignificanceClassifier
         /// </summary>
         public double calculateNvaluethreshold(List<double> actualNValues, List<double> perumtedNValues, double FDR)
         {
-            actualNValues.Sort();
-            actualNValues.Reverse();
-            perumtedNValues.Sort();
-            perumtedNValues.Reverse();
+            actualNValues = actualNValues.OrderByDescending(x => x).ToList();
+            perumtedNValues = perumtedNValues.OrderByDescending(x => x).ToList();
             double countActualNVals = 0;
-            double countPermutedNVals = 0;
-            int actualNvalsArrayTracker = 0;
-            int permutedNvalsArrayTracker = 0;
+            double countPermutedNVals = 0; //much nicer than fake :)
+            int actualNValsArrayTracker = 0;
+            int permutedNValsArrayTracker = 0;
             List<double> combinedNVals = new List<double>();
-            while (true)
+            while (true) //gross. Can we refactor to remove this?
             {
-                if (actualNvalsArrayTracker <= actualNValues.Count() - 1 && permutedNvalsArrayTracker <= perumtedNValues.Count() - 1)
+                if (actualNValsArrayTracker <= actualNValues.Count - 1 && permutedNValsArrayTracker <= perumtedNValues.Count - 1)
                 {
-                    if (actualNValues[actualNvalsArrayTracker] > perumtedNValues[permutedNvalsArrayTracker])
+                    if (actualNValues[actualNValsArrayTracker] > perumtedNValues[permutedNValsArrayTracker])
                     {
-                        combinedNVals.Add(actualNValues[actualNvalsArrayTracker]);
+                        combinedNVals.Add(actualNValues[actualNValsArrayTracker]);
                         countActualNVals++;
-                        actualNvalsArrayTracker++;
+                        actualNValsArrayTracker++;
                     }
-                    else if (actualNValues[actualNvalsArrayTracker] < perumtedNValues[permutedNvalsArrayTracker])
+                    else if (actualNValues[actualNValsArrayTracker] < perumtedNValues[permutedNValsArrayTracker])
                     {
-                        combinedNVals.Add(perumtedNValues[permutedNvalsArrayTracker]);
+                        combinedNVals.Add(perumtedNValues[permutedNValsArrayTracker]);
                         countPermutedNVals++;
-                        permutedNvalsArrayTracker++;
+                        permutedNValsArrayTracker++;
                         if (countActualNVals == 0 || ((countPermutedNVals / countActualNVals) > FDR))
                         {
                             return combinedNVals[combinedNVals.Count - 1];
@@ -264,38 +270,38 @@ namespace ProteinSignificanceClassifier
                     }
                     else
                     {
-                        combinedNVals.Add(actualNValues[actualNvalsArrayTracker]);
-                        combinedNVals.Add(perumtedNValues[permutedNvalsArrayTracker]);
+                        combinedNVals.Add(actualNValues[actualNValsArrayTracker]);
+                        combinedNVals.Add(perumtedNValues[permutedNValsArrayTracker]);
                         countActualNVals++;
                         countPermutedNVals++;
-                        actualNvalsArrayTracker++;
-                        permutedNvalsArrayTracker++;
+                        actualNValsArrayTracker++;
+                        permutedNValsArrayTracker++;
                         if ((countPermutedNVals / countActualNVals) > FDR)
                         {
                             return combinedNVals[combinedNVals.Count - 1];
                         }
                     }
                 }
-                else if (actualNvalsArrayTracker > actualNValues.Count() - 1 && permutedNvalsArrayTracker <= perumtedNValues.Count() - 1)
+                else if (actualNValsArrayTracker > actualNValues.Count - 1 && permutedNValsArrayTracker <= perumtedNValues.Count - 1)
                 {
-                    combinedNVals.Add(perumtedNValues[permutedNvalsArrayTracker]);
+                    combinedNVals.Add(perumtedNValues[permutedNValsArrayTracker]);
                     countPermutedNVals++;
-                    permutedNvalsArrayTracker++;
+                    permutedNValsArrayTracker++;
                     if (countActualNVals == 0 || (countPermutedNVals / countActualNVals) > FDR)
                     {
                         return combinedNVals[combinedNVals.Count - 1];
                     }
                 }
-                else if (actualNvalsArrayTracker <= actualNValues.Count() - 1 && permutedNvalsArrayTracker > perumtedNValues.Count() - 1)
+                else if (actualNValsArrayTracker <= actualNValues.Count - 1 && permutedNValsArrayTracker > perumtedNValues.Count - 1)
                 {
-                    combinedNVals.Add(actualNValues[actualNvalsArrayTracker]);
+                    combinedNVals.Add(actualNValues[actualNValsArrayTracker]);
                     countActualNVals++;
-                    actualNvalsArrayTracker++;
+                    actualNValsArrayTracker++;
                 }
                 else
                 {
                     // need to return last element in combined array as ratio never exceeded
-                    return combinedNVals[combinedNVals.Count() - 1];
+                    return combinedNVals[combinedNVals.Count - 1];
                 }
             }
         }

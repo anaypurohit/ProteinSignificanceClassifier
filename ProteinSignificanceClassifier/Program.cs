@@ -15,6 +15,8 @@ namespace ProteinSignificanceClassifier
         {
             Dictionary<string, List<string>> samplefileConditionRelation = new Dictionary<string, List<string>>();
             int skipFirstLine = 0;
+
+            //refactor here
             foreach (var line in File.ReadLines(experimentalDesignLocation))
             {
                 if (skipFirstLine == 0)
@@ -46,76 +48,72 @@ namespace ProteinSignificanceClassifier
         /// Filters out proteins with >="numNans" number of missing Intensity Values and generates a dictionary file
         /// mapping all conditions to their sampleFileName
         /// </summary>
-        private void ProteinDataParser(List<ProteinRowInfo> allProteinInfo, int maxInvalidIntensityValues,
+        private void ProteinDataParser(List<ProteinRowInfo> allProteinInfo, int maxAllowedMissingValues,
             List<string> samplesFileNames, string quantifiedProteinFileLocation)
         {
-            int startIntensitycolNum = 0;
-            int endIntensitycolNum = 0;
-            int readFirstRow = 0;
-            int proteinIDColNum = 0;
-            int maxAllowedInvalidIntensityValues = maxInvalidIntensityValues;
+            int startIntensityIndex = 0;
+            int endIntensityIndex = 0;
+            int proteinIDIndex = 0;
 
-            foreach (var line in File.ReadLines(quantifiedProteinFileLocation))
+            //read in results
+            string[] lines = File.ReadLines(quantifiedProteinFileLocation).ToArray();
+
+            //parse header
+            string[] header = lines[0].Split('\t');
+            for (int i = 0; i < header.Length; i++)
             {
-                var proteinRow = line.Split('\t');
-
-                // determines location of Intensity values, Protein ID and stores samplefileNames based 
-                // on first line in QuantifiedProteins file
-                if (readFirstRow == 0)
+                if (header[i].StartsWith("Intensity"))
                 {
-                    for (int i = 0; i < proteinRow.Length; i++)
+                    samplesFileNames.Add(header[i]);
+                    if (startIntensityIndex == 0)
                     {
-                        if (proteinRow[i].StartsWith("Intensity"))
-                        {
-                            samplesFileNames.Add(proteinRow[i]);
-                            if (startIntensitycolNum == 0) startIntensitycolNum = i;
-                            endIntensitycolNum = i;
-                        }
-
-                        if (proteinRow[i].StartsWith("Protein"))
-                        {
-                            proteinIDColNum = i;
-                        }
+                        startIntensityIndex = i;
                     }
-                    readFirstRow = 1;
-                    continue;
+                    endIntensityIndex = i;
                 }
 
-                // determine how many invalid Intensity values the given protein has
-                int invalidIntensityValuesForProtein = 0;
-                for (int i = startIntensitycolNum; i <= endIntensitycolNum; i++)
+                if (header[i].StartsWith("Protein"))
                 {
-                    if (string.IsNullOrWhiteSpace(proteinRow[i]) || Convert.ToDouble(proteinRow[i]) == 0) invalidIntensityValuesForProtein++;
+                    proteinIDIndex = i;
                 }
-                if (invalidIntensityValuesForProtein >= maxAllowedInvalidIntensityValues) continue; // invalid sample
+            }
 
-                // we know now that sample is valid so will be stored
-                ProteinRowInfo proteinRowInfo = new ProteinRowInfo();
-                proteinRowInfo.setProteinID(proteinRow[proteinIDColNum]); // set protein ID
+            //parse data
+            for (int l = 1; l < lines.Length; l++)
+            {
+                var proteinRow = lines[l].Split('\t');
 
-                int sampleFileNumberTracker = 0; // used to add the correct intensity value
-                for (int i = startIntensitycolNum; i <= endIntensitycolNum; i++)
+                // determine how many missing Intensity values the given protein has
+                int numMissingValues = 0;
+                for (int i = startIntensityIndex; i <= endIntensityIndex; i++)
                 {
-                    if (string.IsNullOrWhiteSpace(proteinRow[i]))
+                    if (string.IsNullOrWhiteSpace(proteinRow[i]) || Convert.ToDouble(proteinRow[i]) == 0)
                     {
-                        proteinRowInfo.setSamplesIntensityValues(samplesFileNames[sampleFileNumberTracker], 0);
+                        numMissingValues++;
                     }
-                    else
-                    {
-                        if (Convert.ToDouble(proteinRow[i]) == 0)
-                        {
-                            proteinRowInfo.setSamplesIntensityValues(samplesFileNames[sampleFileNumberTracker], 0);
-                        }
-                        else
-                        {
-                            proteinRowInfo.setSamplesIntensityValues(samplesFileNames[sampleFileNumberTracker], Math.Log(Convert.ToDouble(proteinRow[i]), 2));
-                        }
-                    }
-                    sampleFileNumberTracker++;
                 }
 
-                //proper row sample added to list
-                allProteinInfo.Add(proteinRowInfo);
+                //if there are enough valid values
+                if (numMissingValues <= maxAllowedMissingValues)
+                {
+                    // we know now that sample is valid so will be stored
+                    ProteinRowInfo proteinRowInfo = new ProteinRowInfo();
+                    proteinRowInfo.ProteinID = proteinRow[proteinIDIndex]; // set protein ID
+
+                    int sampleFileNumberTracker = 0; // used to add the correct intensity value
+                    for (int i = startIntensityIndex; i <= endIntensityIndex; i++)
+                    {
+                        string writtenValue = proteinRow[i];
+                        double intensity = string.IsNullOrWhiteSpace(writtenValue) || Convert.ToDouble(writtenValue) == 0 ? 
+                            0 : Math.Log(Convert.ToDouble(writtenValue), 2);
+                        proteinRowInfo.SamplesIntensityData[samplesFileNames[sampleFileNumberTracker]] = intensity;
+                       
+                        sampleFileNumberTracker++;
+                    }
+
+                    //proper row sample added to list
+                    allProteinInfo.Add(proteinRowInfo);
+                }
             }
         }
 
@@ -124,7 +122,7 @@ namespace ProteinSignificanceClassifier
         /// Used to resize the permuted N values containing array so that its size is equal 
         /// to the original N values array size
         /// </summary>
-        private void resizePermutedArray(List<double> permutedNValues, int sizeDifference)
+        private void ResizePermutedArray(List<double> permutedNValues, int sizeDifference)
         {
             if (sizeDifference <= 0)
             {
@@ -172,7 +170,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Determines which proteins are significant based on N Value Threshold and prints out the classifications
         /// </summary>
-        private void printSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> actualNValues, double nValueThreshold,
+        private void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> actualNValues, double nValueThreshold,
             List<double> actualPValues, List<double> actualLogFoldChange, string printSignificantProteinsLocation)
         {
             using (StreamWriter writetext = new StreamWriter(printSignificantProteinsLocation))
@@ -187,13 +185,13 @@ namespace ProteinSignificanceClassifier
                     ProteinRowInfo proteinRowInfo = allProteinInfo[i];
                     if (actualNValues[i] < nValueThreshold)
                     {
-                        writetext.Write(proteinRowInfo.getProteinID() + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
+                        writetext.Write(proteinRowInfo.ProteinID + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
                             + ", " + "Not Significant");
                         writetext.WriteLine();
                     }
                     else
                     {
-                        writetext.Write(proteinRowInfo.getProteinID() + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
+                        writetext.Write(proteinRowInfo.ProteinID + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
                             + ", " + "Significant");
                         writetext.WriteLine();
                     }
@@ -246,7 +244,7 @@ namespace ProteinSignificanceClassifier
                             for (int i = 0; i < allProteinInfo.Count; i++)
                             {
                                 ProteinRowInfo proteinRowInfo = allProteinInfo[i];
-                                Dictionary<string, double> samplesintensityData = proteinRowInfo.getSamplesIntensityValues();
+                                Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
 
                                 List<string> firstConditionAssociatedSamples = samplefileConditionRelation.GetValueOrDefault(firstCondition);
                                 List<string> secondConditionAssociatedSamples = samplefileConditionRelation.GetValueOrDefault(secondCondition);
@@ -278,7 +276,7 @@ namespace ProteinSignificanceClassifier
                             }
 
                             // makes the permuted N values list and the actual N Values list of the same size
-                            proteinBasedSignificance.resizePermutedArray(permutedNValues, permutedNValues.Count() - actualNValues.Count());
+                            proteinBasedSignificance.ResizePermutedArray(permutedNValues, permutedNValues.Count() - actualNValues.Count());
 
                             // Copy of the actual N values which will be used when determind the N Value threshold for target FDR 
                             List<double> actualNValuesCopy = new List<double>();
@@ -294,7 +292,7 @@ namespace ProteinSignificanceClassifier
                             if (newSignificantCount > maxSignificantCount)
                             {
                                 maxSignificantCount = newSignificantCount;
-                                proteinBasedSignificance.printSignificantProtein(allProteinInfo, actualNValues, nValueThreshold, actualPValues,
+                                proteinBasedSignificance.PrintSignificantProtein(allProteinInfo, actualNValues, nValueThreshold, actualPValues,
                                     actualLogFoldChange, "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBaseedSignificance.csv");
                             }
                         }
