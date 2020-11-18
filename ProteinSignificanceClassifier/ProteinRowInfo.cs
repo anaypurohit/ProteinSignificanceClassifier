@@ -9,7 +9,6 @@ namespace ProteinSignificanceClassifier
     /// </summary>
     public class ProteinRowInfo
     {
-        //ProteinID is never used. I'm wondering if this object isn't necessary and you could simply replace it with a Dictionary?
         public ProteinRowInfo()
         {
             SamplesIntensityData = new Dictionary<string, double>();

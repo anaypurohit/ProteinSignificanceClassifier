@@ -11,20 +11,16 @@ namespace ProteinSignificanceClassifier
         /// Parses the Experimental Design files outputted from FlashLFQ
         /// Determines the conditions and their corresponding samples
         /// </summary>
-        private Dictionary<string, List<string>> ExpermientalDesignParser(string experimentalDesignLocation)
+        private Dictionary<string, List<string>> ExpermientalDesignParser(string experimentalDesignLocation, ref int numberSamples)
         {
             Dictionary<string, List<string>> samplefileConditionRelation = new Dictionary<string, List<string>>();
-            int skipFirstLine = 0;
 
-            //refactor here
-            foreach (var line in File.ReadLines(experimentalDesignLocation))
+            //read in experimental design
+            string[] lines = File.ReadLines(experimentalDesignLocation).ToArray();
+
+            for (int l = 1; l < lines.Length; l++)
             {
-                if (skipFirstLine == 0)
-                {
-                    skipFirstLine = 1;
-                    continue;
-                }
-                var experimentInfo = line.Split('\t');
+                var experimentInfo = lines[l].Split('\t');
                 string sampleFileName = experimentInfo[0];
                 string sampleCondition = experimentInfo[1];
 
@@ -37,7 +33,7 @@ namespace ProteinSignificanceClassifier
                 {
                     sampleFiles.Add("Intensity_" + sampleFileName);
                 }
-
+                numberSamples++;
             }
             return samplefileConditionRelation;
         }
@@ -170,12 +166,12 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Determines which proteins are significant based on N Value Threshold and prints out the classifications
         /// </summary>
-        private void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> actualNValues, double nValueThreshold,
-            List<double> actualPValues, List<double> actualLogFoldChange, string printSignificantProteinsLocation)
+        private void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> observedNValues, double nValueThreshold,
+            List<double> observedPValues, List<double> observedLogFoldChange, string printSignificantProteinsLocation)
         {
             using (StreamWriter writetext = new StreamWriter(printSignificantProteinsLocation))
             {
-                for (int i = 0; i < actualNValues.Count; i++)
+                for (int i = 0; i < observedNValues.Count; i++)
                 {
                     if (i == 0)
                     {
@@ -183,15 +179,15 @@ namespace ProteinSignificanceClassifier
                         writetext.WriteLine();
                     }
                     ProteinRowInfo proteinRowInfo = allProteinInfo[i];
-                    if (actualNValues[i] < nValueThreshold)
+                    if (observedNValues[i] < nValueThreshold)
                     {
-                        writetext.Write(proteinRowInfo.ProteinID + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
+                        writetext.Write(proteinRowInfo.ProteinID + ", " + observedPValues[i] + ", " + observedLogFoldChange[i]
                             + ", " + "Not Significant");
                         writetext.WriteLine();
                     }
                     else
                     {
-                        writetext.Write(proteinRowInfo.ProteinID + ", " + actualPValues[i] + ", " + actualLogFoldChange[i]
+                        writetext.Write(proteinRowInfo.ProteinID + ", " + observedPValues[i] + ", " + observedLogFoldChange[i]
                             + ", " + "Significant");
                         writetext.WriteLine();
                     }
@@ -202,8 +198,10 @@ namespace ProteinSignificanceClassifier
         public static void Main(string[] args)
         {
             Program proteinBasedSignificance = new Program();
+            int numberSamples = 0;
             // Parse the ExperimentalDesign File to get info of samples and conditions they belong to
-            Dictionary<string, List<string>> samplefileConditionRelation = proteinBasedSignificance.ExpermientalDesignParser("C:/Users/Anay/Desktop/UW Madison/Smith Lab/Spectra Data/ExperimentalDesign.tsv");
+            Dictionary<string, List<string>> samplefileConditionRelation = proteinBasedSignificance.ExpermientalDesignParser("C:/Users/Anay/Desktop/UW Madison/Smith Lab/Spectra Data/ExperimentalDesign.tsv"
+                , ref numberSamples);
             // get all conditions and pair them up for Significance classification
             List<string> allConditions = new List<string>(samplefileConditionRelation.Keys);
             List<List<string>> allTwoConditionCombinations = proteinBasedSignificance.GenerateAllCombinationsOfTwoConditions(allConditions);
@@ -219,7 +217,7 @@ namespace ProteinSignificanceClassifier
                 {
                     while (sOValue < 1)
                     {
-                        for (int k = 1; k < 9; k++)
+                        for (int k = 0; k < numberSamples; k++)
                         {
                             proteinBasedSignificance = new Program();
                             //Declaring variables which will be generated after parsing QuantifiedPeptides file
@@ -234,13 +232,13 @@ namespace ProteinSignificanceClassifier
                             imputationProcess.RunImputationProcess(allProteinInfo, samplesFileNames, meanFraction);
 
                             // Declaring variables which will be generated after T-Tests and Permutation Tests
-                            List<double> actualNValues = new List<double>(); // will store actual(real) N values
-                            List<double> actualPValues = new List<double>(); // will store actual(real) P values
-                            List<double> actualLogFoldChange = new List<double>(); // will store actual(real) Log Fold Change values
-                            List<double> permutedNValues = new List<double>(); // will store permuted(fake) N values
+                            List<double> observedNValues = new List<double>(); // will store observed N values
+                            List<double> observedPValues = new List<double>(); // will store observed P values
+                            List<double> observedLogFoldChange = new List<double>(); // will store observed Log Fold Change values
+                            List<double> permutedNValues = new List<double>(); // will store permuted N values
                             StatisticalTests statisticalTests = new StatisticalTests();
 
-                            // Compute actual and permuted N Values for each protein using T Tests and Permutation Testing
+                            // Compute observed and permuted N Values for each protein using T Tests and Permutation Testing
                             for (int i = 0; i < allProteinInfo.Count; i++)
                             {
                                 ProteinRowInfo proteinRowInfo = allProteinInfo[i];
@@ -264,36 +262,38 @@ namespace ProteinSignificanceClassifier
                                     }
                                 }
 
-                                // Compute actual(real) N Values with the chosen pair of conditions using T-Tests and
-                                // store in actualNValues array
+                                // Compute observed N Values with the chosen pair of conditions using T-Tests and
+                                // store in observedNValues array
                                 statisticalTests.GetNValueUsingTTest(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
-                                    actualNValues, actualPValues, actualLogFoldChange, sOValue);
+                                    observedNValues, observedPValues, observedLogFoldChange, sOValue, false);
 
-                                // Compute permuted(fake) N Values with the chosen pair of conditions using T-Tests and 
+                                // Compute permuted N Values with the chosen pair of conditions using T-Tests and 
                                 // store in permutedNValues array
                                 statisticalTests.GetNValueUsingPermutationtests(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
                                     permutedNValues, sOValue);
                             }
 
-                            // makes the permuted N values list and the actual N Values list of the same size
-                            proteinBasedSignificance.ResizePermutedArray(permutedNValues, permutedNValues.Count() - actualNValues.Count());
+                            // makes the permuted N values list and the observed N Values list of the same size
+                            proteinBasedSignificance.ResizePermutedArray(permutedNValues, permutedNValues.Count() - observedNValues.Count());
 
-                            // Copy of the actual N values which will be used when determind the N Value threshold for target FDR 
-                            List<double> actualNValuesCopy = new List<double>();
-                            for (int i = 0; i < actualNValues.Count; i++)
+                            // Copy of the observed N values which will be used when determind the N Value threshold for target FDR 
+                            List<double> observedNValuesCopy = new List<double>();
+                            for (int i = 0; i < observedNValues.Count; i++)
                             {
-                                actualNValuesCopy.Add(actualNValues[i]);
+                                observedNValuesCopy.Add(observedNValues[i]);
                             }
                             // get the threshold at which we will filter out the significant proteins
-                            double nValueThreshold = statisticalTests.calculateNvaluethreshold(actualNValuesCopy, permutedNValues, 0.05);
+                            double nValueThreshold = statisticalTests.calculateNvaluethreshold(observedNValuesCopy, permutedNValues, 0.05);
 
                             // determine number of signifcant proteins detected
-                            int newSignificantCount = actualNValues.Count(x => x >= nValueThreshold);
+                            int newSignificantCount = observedNValues.Count(x => x >= nValueThreshold);
                             if (newSignificantCount > maxSignificantCount)
                             {
                                 maxSignificantCount = newSignificantCount;
-                                proteinBasedSignificance.PrintSignificantProtein(allProteinInfo, actualNValues, nValueThreshold, actualPValues,
-                                    actualLogFoldChange, "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBaseedSignificance.csv");
+                                proteinBasedSignificance.PrintSignificantProtein(allProteinInfo, observedNValues, nValueThreshold, observedPValues,
+                                    observedLogFoldChange, "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBasedSignificanceModified.csv");
+                                Console.WriteLine("Sig Count - " + maxSignificantCount + "meanFraction - " + meanFraction + "sOValue - "
+                                    + sOValue + "k - " + k);
                             }
                         }
                         sOValue = sOValue + 0.1;
