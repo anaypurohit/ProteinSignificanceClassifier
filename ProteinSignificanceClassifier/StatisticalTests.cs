@@ -14,7 +14,7 @@ namespace ProteinSignificanceClassifier
         /// This method is used to generate all possible combinations of choosing 2 indicies from
         /// the given indicies
         /// </summary>
-        private static List<List<int>> GenerateAllCombinationsOfTwoIndices(List<double> indices)
+        public List<List<int>> GenerateAllCombinationsOfTwoIndices(List<double> indices)
         {
             List<List<int>> allTwoIndicesCombination = new List<List<int>>();
             for (int i = 0; i < indices.Count; i++)
@@ -30,7 +30,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Calculates the standard deviation of intensity values of the protein
         /// </summary>
-        private double CalculateProteinIntensityValuesStandardDeviation(List<double> intensityValues, double intensityValuesMean)
+        public double CalculateProteinIntensityValuesStandardDeviation(List<double> intensityValues, double intensityValuesMean)
         {
             double intensityValuesStdDev = 0;
 

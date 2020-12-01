@@ -23,3 +23,10 @@ C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClas
 C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.AssemblyInfo.cs
 C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.dll
 C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\obj\Debug\netcoreapp2.1\ProteinSignificanceClassifier.pdb
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\NUnit3.TestAdapter.dll
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\NUnit3.TestAdapter.pdb
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\nunit.engine.dll
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\nunit.engine.api.dll
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\nunit.engine.core.dll
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\testhost.exe
+C:\Users\Anay\source\repos\ProteinSignificanceClassifier\ProteinSignificanceClassifier\bin\Debug\netcoreapp2.1\testhost.dll

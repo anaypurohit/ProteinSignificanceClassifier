@@ -5,13 +5,13 @@ using System.Linq;
 
 namespace ProteinSignificanceClassifier
 {
-    class Program
+    public class RunProteinSignificanceClassifier
     {
         /// <summary>
         /// Parses the Experimental Design files outputted from FlashLFQ
         /// Determines the conditions and their corresponding samples
         /// </summary>
-        private Dictionary<string, List<string>> ExpermientalDesignParser(string experimentalDesignLocation, ref int numberSamples)
+        public Dictionary<string, List<string>> ExpermientalDesignParser(string experimentalDesignLocation, ref int numberSamples)
         {
             Dictionary<string, List<string>> samplefileConditionRelation = new Dictionary<string, List<string>>();
 
@@ -44,7 +44,7 @@ namespace ProteinSignificanceClassifier
         /// Filters out proteins with >="numNans" number of missing Intensity Values and generates a dictionary file
         /// mapping all conditions to their sampleFileName
         /// </summary>
-        private void ProteinDataParser(List<ProteinRowInfo> allProteinInfo, int maxAllowedMissingValues,
+        public void ProteinDataParser(List<ProteinRowInfo> allProteinInfo, int maxAllowedMissingValues,
             List<string> samplesFileNames, string quantifiedProteinFileLocation)
         {
             int startIntensityIndex = 0;
@@ -118,7 +118,7 @@ namespace ProteinSignificanceClassifier
         /// Used to resize the permuted N values containing array so that its size is equal 
         /// to the original N values array size
         /// </summary>
-        private void ResizePermutedArray(List<double> permutedNValues, int sizeDifference)
+        public void ResizePermutedArray(List<double> permutedNValues, int sizeDifference)
         {
             if (sizeDifference <= 0)
             {
@@ -146,7 +146,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// This method is used to generate all possible combinations of choosing 2 conditions from all possible conditions
         /// </summary>
-        private List<List<string>> GenerateAllCombinationsOfTwoConditions(List<string> conditions)
+        public List<List<string>> GenerateAllCombinationsOfTwoConditions(List<string> conditions)
         {
             List<List<string>> allTwoConditionCombinations = new List<List<string>>();
             for (int i = 0; i < conditions.Count; i++)
@@ -166,7 +166,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Determines which proteins are significant based on N Value Threshold and prints out the classifications
         /// </summary>
-        private void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> observedNValues, double nValueThreshold,
+        public void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> observedNValues, double nValueThreshold,
             List<double> observedPValues, List<double> observedLogFoldChange, string printSignificantProteinsLocation)
         {
             using (StreamWriter writetext = new StreamWriter(printSignificantProteinsLocation))
@@ -197,7 +197,7 @@ namespace ProteinSignificanceClassifier
 
         public static void Main(string[] args)
         {
-            Program proteinBasedSignificance = new Program();
+            RunProteinSignificanceClassifier proteinBasedSignificance = new RunProteinSignificanceClassifier();
             int numberSamples = 0;
             // Parse the ExperimentalDesign File to get info of samples and conditions they belong to
             Dictionary<string, List<string>> samplefileConditionRelation = proteinBasedSignificance.ExpermientalDesignParser("C:/Users/Anay/Desktop/UW Madison/Smith Lab/Spectra Data/ExperimentalDesign.tsv"
@@ -219,7 +219,7 @@ namespace ProteinSignificanceClassifier
                     {
                         for (int k = 0; k < numberSamples; k++)
                         {
-                            proteinBasedSignificance = new Program();
+                            proteinBasedSignificance = new RunProteinSignificanceClassifier();
                             //Declaring variables which will be generated after parsing QuantifiedPeptides file
                             List<ProteinRowInfo> allProteinInfo = new List<ProteinRowInfo>();
                             List<string> samplesFileNames = new List<string>();

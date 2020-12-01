@@ -12,7 +12,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Detects protein's missing intensity values and increase the number of such missing values found for each sample
         /// </summary>
-        private void CalculateMissingIntensityValuesInSample(ProteinRowInfo proteinRowInfo, double[] missingFactor,
+        public void CalculateMissingIntensityValuesInSample(ProteinRowInfo proteinRowInfo, double[] missingFactor,
             List<string> samplesFileNames)
         {
             Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
@@ -31,7 +31,7 @@ namespace ProteinSignificanceClassifier
         /// Uses protein intensity information to add and eventually compute the sum of all intensity values for each sample. 
         /// Similarly calculates total number of valid intensity values for each sample
         /// </summary>
-        private void CalculateNumberAndSumOfIntensityValuesOfSample(ProteinRowInfo proteinRowInfo, double[] sampleAllIntensityValuesSum,
+        public void CalculateNumberAndSumOfIntensityValuesOfSample(ProteinRowInfo proteinRowInfo, double[] sampleAllIntensityValuesSum,
             List<string> samplesFileNames, int[] numberOfIntensityValuesInSample)
         {
             Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
@@ -53,7 +53,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Uses protein intensity information to compute the numerator of standard deviation of all intensity values for each sample. 
         /// </summary>
-        private void CalculateSampleStandardDeviationNumerator(ProteinRowInfo proteinRowInfo, double[] samplesStandardDeviationNumerators,
+        public void CalculateSampleStandardDeviationNumerator(ProteinRowInfo proteinRowInfo, double[] samplesStandardDeviationNumerators,
             List<string> samplesFileNames, double[] samplesMeanIntensityValue)
         {
             Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
@@ -70,7 +70,7 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Imputes missing intensity value for each protein
         /// </summary>
-        private void ImputeData(ProteinRowInfo proteinRowInfo, double[] samplesMeanIntensityValue, double[] samplesStandardDeviation,
+        public void ImputeData(ProteinRowInfo proteinRowInfo, double[] samplesMeanIntensityValue, double[] samplesStandardDeviation,
             List<string> samplesFileNames, double[] missingFactor, int[] numberOfIntensityValuesInSample, double meanFraction)
         {
             Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
