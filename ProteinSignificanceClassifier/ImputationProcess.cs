@@ -71,7 +71,8 @@ namespace ProteinSignificanceClassifier
         /// Imputes missing intensity value for each protein
         /// </summary>
         public void ImputeData(ProteinRowInfo proteinRowInfo, double[] samplesMeanIntensityValue, double[] samplesStandardDeviation,
-            List<string> samplesFileNames, double[] missingFactor, int[] numberOfIntensityValuesInSample, double meanFraction)
+            List<string> samplesFileNames, double[] missingFactor, int[] numberOfIntensityValuesInSample, double meanFraction,
+            bool unitTesting)
         {
             Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
 
@@ -93,10 +94,18 @@ namespace ProteinSignificanceClassifier
                         double deltaMu = xCoord.InverseCumulativeDistribution(yCoordinate);
                         double meanDownshift = (deltaMu - deltaX * meanFraction);
 
-
-                        Normal normalDist = new Normal(meanDownshift, standardDeviationFraction);
-                        double imputeVal = normalDist.Sample();
-                        samplesintensityData[samplesFileNames[i]] = imputeVal;
+                        if (!unitTesting)
+                        {
+                            Normal normalDist = new Normal(meanDownshift, standardDeviationFraction);
+                            double imputeVal = normalDist.Sample();
+                            samplesintensityData[samplesFileNames[i]] = imputeVal;
+                        }
+                        else
+                        {
+                            Normal normalDist = new Normal(meanDownshift, standardDeviationFraction, new Random(2));
+                            double imputeVal = normalDist.Sample();
+                            samplesintensityData[samplesFileNames[i]] = imputeVal;
+                        }
                     }
                 }
             }
@@ -151,7 +160,7 @@ namespace ProteinSignificanceClassifier
             {
                 ProteinRowInfo proteinRowInfo = allProteinInfo[i];
                 ImputeData(proteinRowInfo, samplesMeanIntensityValue, samplesStandardDeviation, samplesFileNames, missingFactor,
-                    numberOfIntensityValuesInSample, meanFraction);
+                    numberOfIntensityValuesInSample, meanFraction, false);
             }
         }
     }
