@@ -80,32 +80,29 @@ namespace ProteinSignificanceClassifier
             {
                 if (samplesintensityData[samplesFileNames[i]] == 0)
                 {
-                    double imputedFraction = missingFactor[i] / (numberOfIntensityValuesInSample[i] + missingFactor[i]);
-                    if (imputedFraction <= 0.5)
-                    {
-                        double imputedProbability = imputedFraction / (1 - imputedFraction);
-                        double standardDeviationFraction = Math.Max(2 * imputedFraction, 0.3);
-                        double stdDevFraction = 0.6 * (1 - (imputedFraction * imputedFraction));
-                        Normal probabilityDist = new Normal(samplesMeanIntensityValue[i], standardDeviationFraction);
-                        double probabilitySetPoint = probabilityDist.Density(samplesMeanIntensityValue[i] + stdDevFraction * standardDeviationFraction);
-                        double yCoordinate = imputedProbability * probabilitySetPoint;
-                        double deltaX = standardDeviationFraction * stdDevFraction;
-                        Normal xCoord = new Normal(samplesMeanIntensityValue[i], samplesStandardDeviation[i]);
-                        double deltaMu = xCoord.InverseCumulativeDistribution(yCoordinate);
-                        double meanDownshift = (deltaMu - deltaX * meanFraction);
+                    double imputedFraction = Math.Min(missingFactor[i] / (numberOfIntensityValuesInSample[i] + missingFactor[i]), 1);
+                    double imputedProbability = imputedFraction / (1 - imputedFraction);
+                    double standardDeviationFraction = Math.Max(2 * imputedFraction, 0.3);
+                    double stdDevFraction = 0.6 * (1 - (imputedFraction * imputedFraction));
+                    Normal probabilityDist = new Normal(samplesMeanIntensityValue[i], standardDeviationFraction);
+                    double probabilitySetPoint = probabilityDist.Density(samplesMeanIntensityValue[i] + stdDevFraction * standardDeviationFraction);
+                    double yCoordinate = imputedProbability * probabilitySetPoint;
+                    double deltaX = standardDeviationFraction * stdDevFraction;
+                    Normal xCoord = new Normal(samplesMeanIntensityValue[i], samplesStandardDeviation[i]);
+                    double deltaMu = xCoord.InverseCumulativeDistribution(yCoordinate);
+                    double meanDownshift = (deltaMu - deltaX * meanFraction);
 
-                        if (!unitTesting)
-                        {
-                            Normal normalDist = new Normal(meanDownshift, standardDeviationFraction);
-                            double imputeVal = normalDist.Sample();
-                            samplesintensityData[samplesFileNames[i]] = imputeVal;
-                        }
-                        else
-                        {
-                            Normal normalDist = new Normal(meanDownshift, standardDeviationFraction, new Random(2));
-                            double imputeVal = normalDist.Sample();
-                            samplesintensityData[samplesFileNames[i]] = imputeVal;
-                        }
+                    if (!unitTesting)
+                    {
+                        Normal normalDist = new Normal(meanDownshift, standardDeviationFraction);
+                        double imputeVal = normalDist.Sample();
+                        samplesintensityData[samplesFileNames[i]] = imputeVal;
+                    }
+                    else
+                    {
+                        Normal normalDist = new Normal(meanDownshift, standardDeviationFraction, new Random(2));
+                        double imputeVal = normalDist.Sample();
+                        samplesintensityData[samplesFileNames[i]] = imputeVal;
                     }
                 }
             }

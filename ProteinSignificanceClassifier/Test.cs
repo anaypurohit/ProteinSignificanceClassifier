@@ -467,18 +467,15 @@ namespace ProteinSignificanceClassifier
             proteinSecondConditionIntensityValues.Add(25.359);
             proteinSecondConditionIntensityValues.Add(25.251);
 
-            List<double> outputNValues = new List<double>();
-            List<double> outputPValues = new List<double>();
-            List<double> outputLogFoldChange = new List<double>();
             double sOValue = 0.3;
 
             StatisticalTests statisticalTests = new StatisticalTests();
-            statisticalTests.GetNValueUsingTTest(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
-                outputNValues, outputPValues, outputLogFoldChange, sOValue, false);
+            List<double> proteinStatistics = statisticalTests.GetNValueUsingTTest(proteinFirstConditionIntensityValues, 
+                proteinSecondConditionIntensityValues, sOValue, false);
 
-            Assert.AreEqual(expectedPValue, outputPValues[0], 0.001);
-            Assert.AreEqual(expectedLogFoldChange, outputLogFoldChange[0], 0.001);
-            Assert.AreEqual(expectedNValue, outputNValues[0], 0.001);
+            Assert.AreEqual(expectedNValue, proteinStatistics[0], 0.001);
+            Assert.AreEqual(expectedPValue, proteinStatistics[1], 0.001);
+            Assert.AreEqual(expectedLogFoldChange, proteinStatistics[2], 0.001);
         }
 
         [TestCase]
@@ -511,12 +508,12 @@ namespace ProteinSignificanceClassifier
             proteinSecondConditionIntensityValues.Add(25.359);
             proteinSecondConditionIntensityValues.Add(25.251);
 
-            List<double> outputPermutedNValues = new List<double>();
+            
             double sOValue = 0.3;
 
             StatisticalTests statisticalTests = new StatisticalTests();
-            statisticalTests.GetNValueUsingPermutationtests(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
-                outputPermutedNValues, sOValue);
+            List<double> outputPermutedNValues = statisticalTests.GetNValueUsingPermutationtests(proteinFirstConditionIntensityValues, 
+                proteinSecondConditionIntensityValues, sOValue);
 
             Assert.That(expectedPermutedNValues, Is.EqualTo(outputPermutedNValues).Within(0.001));
         }

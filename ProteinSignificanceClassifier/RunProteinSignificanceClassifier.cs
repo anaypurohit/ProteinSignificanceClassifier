@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ProteinSignificanceClassifier
 {
@@ -120,11 +122,7 @@ namespace ProteinSignificanceClassifier
         /// </summary>
         public void ResizePermutedArray(List<double> permutedNValues, int sizeDifference)
         {
-            if (sizeDifference <= 0)
-            {
-                return;
-            }
-            else
+            if (sizeDifference != 0)
             {
                 permutedNValues.Sort();
                 var trackElements = (Convert.ToDouble(permutedNValues.Count) - 1) / sizeDifference;
@@ -166,32 +164,50 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Determines which proteins are significant based on N Value Threshold and prints out the classifications
         /// </summary>
-        public void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, List<double> observedNValues, double nValueThreshold,
-            List<double> observedPValues, List<double> observedLogFoldChange, string printSignificantProteinsLocation)
+        public void PrintSignificantProtein(List<ProteinRowInfo> allProteinInfo, double nValueThreshold,
+            Dictionary<string, List<double>> allProteinObservedStatistics, string printSignificantProteinsLocation)
         {
             using (StreamWriter writetext = new StreamWriter(printSignificantProteinsLocation))
             {
-                for (int i = 0; i < observedNValues.Count; i++)
+                writetext.Write("ProteinID" + ", " + "PValue" + ", " + "LogFoldChange" + ", " + "Significance");
+                writetext.WriteLine();
+                foreach (string proteinID in allProteinObservedStatistics.Keys)
                 {
-                    if (i == 0)
+                    if (allProteinObservedStatistics[proteinID][0] < nValueThreshold)
                     {
-                        writetext.Write("ProteinID" + ", " + "PValue" + ", " + "LogFoldChange" + ", " + "Significance");
-                        writetext.WriteLine();
-                    }
-                    ProteinRowInfo proteinRowInfo = allProteinInfo[i];
-                    if (observedNValues[i] < nValueThreshold)
-                    {
-                        writetext.Write(proteinRowInfo.ProteinID + ", " + observedPValues[i] + ", " + observedLogFoldChange[i]
-                            + ", " + "Not Significant");
+                        writetext.Write(proteinID + ", " + allProteinObservedStatistics[proteinID][1] + ", " 
+                            + allProteinObservedStatistics[proteinID][2] + ", " + "Not Significant");
                         writetext.WriteLine();
                     }
                     else
                     {
-                        writetext.Write(proteinRowInfo.ProteinID + ", " + observedPValues[i] + ", " + observedLogFoldChange[i]
-                            + ", " + "Significant");
+                        writetext.Write(proteinID + ", " + allProteinObservedStatistics[proteinID][1] + ", "
+                            + allProteinObservedStatistics[proteinID][2] + ", " + "Significant");
                         writetext.WriteLine();
                     }
                 }
+
+                //for (int i = 0; i < observedNValues.Count; i++)
+                //{
+                //    if (i == 0)
+                //    {
+                //        writetext.Write("ProteinID" + ", " + "PValue" + ", " + "LogFoldChange" + ", " + "Significance");
+                //        writetext.WriteLine();
+                //    }
+                //    ProteinRowInfo proteinRowInfo = allProteinInfo[i];
+                //    if (observedNValues[i] < nValueThreshold)
+                //    {
+                //        writetext.Write(proteinRowInfo.ProteinID + ", " + observedPValues[i] + ", " + observedLogFoldChange[i]
+                //            + ", " + "Not Significant");
+                //        writetext.WriteLine();
+                //    }
+                //    else
+                //    {
+                //        writetext.Write(proteinRowInfo.ProteinID + ", " + observedPValues[i] + ", " + observedLogFoldChange[i]
+                //            + ", " + "Significant");
+                //        writetext.WriteLine();
+                //    }
+                //}
             }
         }
 
@@ -233,65 +249,79 @@ namespace ProteinSignificanceClassifier
 
                             // Declaring variables which will be generated after T-Tests and Permutation Tests
                             List<double> observedNValues = new List<double>(); // will store observed N values
-                            List<double> observedPValues = new List<double>(); // will store observed P values
-                            List<double> observedLogFoldChange = new List<double>(); // will store observed Log Fold Change values
                             List<double> permutedNValues = new List<double>(); // will store permuted N values
                             StatisticalTests statisticalTests = new StatisticalTests();
 
-                            // Compute observed and permuted N Values for each protein using T Tests and Permutation Testing
-                            for (int i = 0; i < allProteinInfo.Count; i++)
+                            // contains proteins and their observed N value, P Value and Log Fold Change 
+                            Dictionary<string, List<double>> allProteinObservedStatistics = new Dictionary<string, List<double>>();
+                            // Creating threads for Parallelizing code
+                            ThreadPool.GetMaxThreads(out int workerThreadsCount, out int ioThreadsCount);
+                            int[] threads = Enumerable.Range(0, workerThreadsCount).ToArray();
+                            Parallel.ForEach(threads, (i) =>
                             {
-                                ProteinRowInfo proteinRowInfo = allProteinInfo[i];
-                                Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
-
-                                List<string> firstConditionAssociatedSamples = samplefileConditionRelation.GetValueOrDefault(firstCondition);
-                                List<string> secondConditionAssociatedSamples = samplefileConditionRelation.GetValueOrDefault(secondCondition);
-                                List<double> proteinFirstConditionIntensityValues = new List<double>();
-                                List<double> proteinSecondConditionIntensityValues = new List<double>();
-
-                                // get the protein's intensity values corresponding to the chosen pair of conditions
-                                foreach (string sampleFileName in samplesFileNames)
+                                // Compute observed and permuted N Values for each protein using T Tests and Permutation Testing
+                                for (; i < allProteinInfo.Count; i += workerThreadsCount)
                                 {
-                                    if (firstConditionAssociatedSamples.Contains(sampleFileName))
+                                    ProteinRowInfo proteinRowInfo = allProteinInfo[i];
+                                    Dictionary<string, double> samplesintensityData = proteinRowInfo.SamplesIntensityData;
+
+                                    List<string> firstConditionAssociatedSamples = samplefileConditionRelation.GetValueOrDefault(firstCondition);
+                                    List<string> secondConditionAssociatedSamples = samplefileConditionRelation.GetValueOrDefault(secondCondition);
+                                    List<double> proteinFirstConditionIntensityValues = new List<double>();
+                                    List<double> proteinSecondConditionIntensityValues = new List<double>();
+
+                                    // get the protein's intensity values corresponding to the chosen pair of conditions
+                                    foreach (string sampleFileName in samplesFileNames)
                                     {
-                                        proteinFirstConditionIntensityValues.Add(samplesintensityData[sampleFileName]);
+                                        if (firstConditionAssociatedSamples.Contains(sampleFileName))
+                                        {
+                                            proteinFirstConditionIntensityValues.Add(samplesintensityData[sampleFileName]);
+                                        }
+                                        if (secondConditionAssociatedSamples.Contains(sampleFileName))
+                                        {
+                                            proteinSecondConditionIntensityValues.Add(samplesintensityData[sampleFileName]);
+                                        }
                                     }
-                                    if (secondConditionAssociatedSamples.Contains(sampleFileName))
+
+                                    // Compute observed N Values with the chosen pair of conditions using T-Tests and
+                                    // store in observedNValues array
+                                    List<double> proteinStatistics = statisticalTests.GetNValueUsingTTest(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
+                                        sOValue, false);
+
+                                    // Compute permuted N Values with the chosen pair of conditions using T-Tests and 
+                                    // store in permutedNValues array
+                                    List<double> proteinPermutedNavlues = statisticalTests.GetNValueUsingPermutationtests(proteinFirstConditionIntensityValues, 
+                                        proteinSecondConditionIntensityValues, sOValue);
+
+                                    // add computed original and permuted statistics for the protein
+                                    lock(allProteinObservedStatistics)
                                     {
-                                        proteinSecondConditionIntensityValues.Add(samplesintensityData[sampleFileName]);
+                                        // add protein and its observed N value, P Value and Log Fold Change in that order
+                                        allProteinObservedStatistics.Add(proteinRowInfo.ProteinID, new List<double>() { proteinStatistics[0],
+                                        proteinStatistics[1], proteinStatistics[2]});
+                                        observedNValues.Add(proteinStatistics[0]);
+                                        foreach (double permutedNValue in proteinPermutedNavlues)
+                                        {
+                                            permutedNValues.Add(permutedNValue);
+                                        }
                                     }
                                 }
 
-                                // Compute observed N Values with the chosen pair of conditions using T-Tests and
-                                // store in observedNValues array
-                                statisticalTests.GetNValueUsingTTest(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
-                                    observedNValues, observedPValues, observedLogFoldChange, sOValue, false);
-
-                                // Compute permuted N Values with the chosen pair of conditions using T-Tests and 
-                                // store in permutedNValues array
-                                statisticalTests.GetNValueUsingPermutationtests(proteinFirstConditionIntensityValues, proteinSecondConditionIntensityValues,
-                                    permutedNValues, sOValue);
-                            }
+                            });
 
                             // makes the permuted N values list and the observed N Values list of the same size
                             proteinBasedSignificance.ResizePermutedArray(permutedNValues, permutedNValues.Count() - observedNValues.Count());
 
-                            // Copy of the observed N values which will be used when determind the N Value threshold for target FDR 
-                            List<double> observedNValuesCopy = new List<double>();
-                            for (int i = 0; i < observedNValues.Count; i++)
-                            {
-                                observedNValuesCopy.Add(observedNValues[i]);
-                            }
                             // get the threshold at which we will filter out the significant proteins
-                            double nValueThreshold = statisticalTests.calculateNvaluethreshold(observedNValuesCopy, permutedNValues, 0.05);
+                            double nValueThreshold = statisticalTests.calculateNvaluethreshold(observedNValues, permutedNValues, 0.05);
 
                             // determine number of signifcant proteins detected
                             int newSignificantCount = observedNValues.Count(x => x >= nValueThreshold);
                             if (newSignificantCount > maxSignificantCount)
                             {
                                 maxSignificantCount = newSignificantCount;
-                                proteinBasedSignificance.PrintSignificantProtein(allProteinInfo, observedNValues, nValueThreshold, observedPValues,
-                                    observedLogFoldChange, "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBasedSignificanceModified.csv");
+                                proteinBasedSignificance.PrintSignificantProtein(allProteinInfo, nValueThreshold, allProteinObservedStatistics, 
+                                    "C:/Users/Anay/Desktop/UW Madison/Smith Lab/Project 1/ConsoleApp1/ProteinBasedSignificanceModified.csv");
                                 Console.WriteLine("Sig Count - " + maxSignificantCount + "meanFraction - " + meanFraction + "sOValue - "
                                     + sOValue + "k - " + k);
                             }

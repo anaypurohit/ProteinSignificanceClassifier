@@ -56,8 +56,8 @@ namespace ProteinSignificanceClassifier
         /// sets comprising of replicate data by plotting the signifance statistic on the y axis, which is the pValue here,
         /// and the magnitude chanbge on the x axis, which is the logFoldChange here)
         /// </summary>
-        public void GetNValueUsingTTest(List<double> proteinFirstConditionIntensityValues, List<double> proteinSecondConditionIntensityValues,
-            List<double> nValues, List<double> pValues, List<double> logFoldChange, double sOValue, bool permutationTesting)
+        public List<double> GetNValueUsingTTest(List<double> proteinFirstConditionIntensityValues, List<double> proteinSecondConditionIntensityValues,
+            double sOValue, bool permutationTesting)
         {
             double mean1 = proteinFirstConditionIntensityValues.Average();
             double mean2 = proteinSecondConditionIntensityValues.Average();
@@ -83,13 +83,21 @@ namespace ProteinSignificanceClassifier
 
             if (!permutationTesting)
             {
-                nValues.Add(nValue);
-                logFoldChange.Add(logfoldChange);
-                pValues.Add(pValue);
+                List<double> proteinStatistics = new List<double>();
+                proteinStatistics.Add(nValue);
+                proteinStatistics.Add(pValue);
+                proteinStatistics.Add(logfoldChange);
+                return proteinStatistics;
+                //nValues.Add(nValue);
+                ///logFoldChange.Add(logfoldChange);
+                //pValues.Add(pValue);
             }
             else
             {
-                nValues.Add(nValue);
+                List<double> proteinStatistics = new List<double>();
+                proteinStatistics.Add(nValue);
+                return proteinStatistics;
+                //nValues.Add(nValue);
             }
 
         }
@@ -97,11 +105,12 @@ namespace ProteinSignificanceClassifier
         /// <summary>
         /// Generates permuted N Value's for each protein based on its intensity values in two conditions using Permutation Testing
         /// </summary>
-        public void GetNValueUsingPermutationtests(List<double> proteinFirstConditionIntensityValues, List<double> proteinSecondConditionIntensityValues,
-             List<double> permutedNValues, double sOValue)
+        public List<double> GetNValueUsingPermutationtests(List<double> proteinFirstConditionIntensityValues,
+            List<double> proteinSecondConditionIntensityValues, double sOValue)
         {
             List<List<int>> allTwoIndiciesCombinationsFromFirstCondition = GenerateAllCombinationsOfTwoIndices(proteinFirstConditionIntensityValues);
             List<List<int>> allTwoIndiciesCombinationsFromSecondCondition = GenerateAllCombinationsOfTwoIndices(proteinSecondConditionIntensityValues);
+            List<double> proteinPermutedNValues = new List<double>();
 
             int count = 0;
             foreach (var twoIndiciesCombinationEntryFromFirstCondition in allTwoIndiciesCombinationsFromFirstCondition)
@@ -159,12 +168,13 @@ namespace ProteinSignificanceClassifier
 
                     // at this stage we have the newly made swapped arrays with mixture of groups.
                     // need to proceed with T tests for these groups to generate permuted p values.
-                    GetNValueUsingTTest(swappedFirstConditionIntensityValues, swappedSecondConditionIntensityValues, permutedNValues,
-                        null, null, sOValue, true);
+                    proteinPermutedNValues.Add(GetNValueUsingTTest(swappedFirstConditionIntensityValues, 
+                        swappedSecondConditionIntensityValues, sOValue, true)[0]);
                 }
                 count++;
                 if (count == 2) break;
             }
+            return proteinPermutedNValues;
         }
 
         /// <summary>
